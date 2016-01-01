@@ -1,0 +1,369 @@
+## R Script for Histograms and Bar Charts ##
+
+## YOU WILL NEED THE FOLLOWING:
+
+##      Data saved in the Home Directory named "MESHES" 
+
+##     R version 3.2.2 "Fire Safety" 
+
+##     Packages :      gdata    
+##                     RPMG     
+##                     Hmisc    
+
+#*************** INSTALL AND LOAD REQUIRED LIBRARIES
+install.packages("gdata")
+library("gdata", lib.loc="/Library/Frameworks/R.framework/Versions/3.2/Resources/library")
+install.packages("RPMG")
+library("RPMG", lib.loc="/Library/Frameworks/R.framework/Versions/3.2/Resources/library")
+install.packages("Hmisc")
+library("Hmisc", lib.loc="/Library/Frameworks/R.framework/Versions/3.2/Resources/library")
+
+#*************************************** Load exponential and stationary data
+
+Ex.files.D1 <- dir("MESHES/exponential day 1", pattern = "\\.xls", full.names = TRUE, ignore.case = TRUE)
+Ex.files.D2 <- dir("MESHES/exponential day 2", pattern = "\\.xls", full.names = TRUE, ignore.case = TRUE)
+Ex.files.D3 <- dir("MESHES/exponential day 3", pattern = "\\.xls", full.names = TRUE, ignore.case = TRUE)
+
+St.files.D1 <- dir("MESHES/stationary day 1", pattern = "\\.xls", full.names = TRUE, ignore.case = TRUE)
+St.files.D2 <- dir("MESHES/stationary day 2", pattern = "\\.xls", full.names = TRUE, ignore.case = TRUE)
+St.files.D3 <- dir("MESHES/stationary day 3", pattern = "\\.xls", full.names = TRUE, ignore.case = TRUE)
+
+#************************************* Define preliminary data which will
+#************************************* be used later in the code. 
+
+t1 <- read.xls(Ex.files.D1[18])
+t2 <- read.xls(Ex.files.D2[18])
+t3 <- read.xls(Ex.files.D3[18])
+t4 <- read.xls(St.files.D1[18])
+t5 <- read.xls(St.files.D2[18])
+t6 <- read.xls(St.files.D3[18])
+t7 <- mean(c(t1$signal1,t2$signal1,t3$signal1))
+t8 <- mean(c(t4$signal1,t5$signal1,t6$signal1))
+meanE <- vector('numeric',18)
+meanS <- vector('numeric',18)
+errE <- vector('numeric',18)
+errS <- vector('numeric',18)
+
+#********************************************  Define names of bars
+
+devices = c(expression(paste('wild type')),
+            expression(paste(P[lac],italic('-mCherry'), ' + 1mM IPTG')),
+            expression(paste(P[lac],italic('-mCherry'))),
+            expression(paste(P[E2],italic('-mCherry'))),
+            expression(paste(P[S19-E2],italic('-mCherry'))),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1mM EE2')),
+            expression(paste(P[S19-E2],italic('-mCherry'),' + 1mM EE2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1',~mu, 'M EE2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1',~mu, 'M EE2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1nM EE2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1nM EE2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1mM E2')),
+            expression(paste(P[S19-E2],'-mCherry + 1mM E2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1',~mu, 'M E2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1',~mu, 'M E2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1nM E2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1nM E2')),
+            expression(paste(italic('-mCherry'))),
+            expression(paste('wild type')),
+            expression(paste(P[lac],italic('-mCherry'), ' + 1mM IPTG')),
+            expression(paste(P[lac],italic('-mCherry'))),
+            expression(paste(P[E2],italic('-mCherry'))),
+            expression(paste(P[S19-E2],italic('-mCherry'))),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1mM EE2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1mM EE2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1',~mu, 'M EE2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1',~mu, 'M EE2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1nM EE2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1nM EE2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1mM E2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1mM E2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1',~mu, 'M E2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1',~mu, 'M E2')),
+            expression(paste(P[E2],italic('-mCherry'), ' + 1nM E2')),
+            expression(paste(P[S19-E2],italic('-mCherry'), ' + 1nM E2')),
+            expression(paste(italic('-mCherry'))))
+
+Hcol = c('peachpuff1','palevioletred1','peachpuff1',
+         'peachpuff1','peachpuff1','paleturquoise1',
+         'paleturquoise3','paleturquoise4','paleturquoise1', 
+         'paleturquoise3','paleturquoise4','palegreen1',
+         'palegreen3','palegreen4','palegreen1',
+         'palegreen3','palegreen4','peachpuff1')
+
+ExSig <- list()
+StSig <- list()
+#********************************************** Loop through each mesh
+
+for (i in 1:18) {
+  
+  #******************************************* read in Ex and St data for each day 
+  
+  d1 <- read.xls(Ex.files.D1[i])
+  e1 <- read.xls(Ex.files.D2[i])
+  f1 <- read.xls(Ex.files.D3[i])
+  d2 <- read.xls(St.files.D1[i])
+  e2 <- read.xls(St.files.D2[i])
+  f2 <- read.xls(St.files.D3[i])
+  
+  #******************************************* remove background
+  
+  if( i > 1 & i < 18) {
+    d1$signal1 = d1$signal1 - t7
+    e1$signal1 = e1$signal1 - t7
+    f1$signal1 = f1$signal1 - t7
+    d2$signal1 = d2$signal1 - t8
+    e2$signal1 = e2$signal1 - t8
+    f2$signal1 = f2$signal1 - t8
+  }
+  
+  #******************************************* Round each mesh to 1dp
+  
+  d1$signal1 = round(d1$signal1, digits = 1)
+  e1$signal1 = round(e1$signal1, digits = 1)
+  f1$signal1 = round(f1$signal1, digits = 1)
+  d2$signal1 = round(d2$signal1, digits = 1)
+  e2$signal1 = round(e2$signal1, digits = 1)
+  f2$signal1 = round(f2$signal1, digits = 1)
+  
+  #******************************************* Bind days together 
+  
+  df1 <- rbind(d1,e1,f1);
+  df2 <- rbind(d2,e2,f2);
+  
+  #******************************************* Compile into a list
+  
+  ExSig[[i]] <- df1$signal1
+  StSig[[i]] <- df2$signal1
+  
+  #******************************************* Calculate Ex and St means
+  
+  meanE[i] <- sum(df1$signal1)/length(df1$signal1)
+  meanS[i] <- sum(df2$signal1)/length(df2$signal1)
+  
+  #******************************************* Calculate Ex and St Errors
+  
+  errE[i] <- 1.96*sd(df1$signal1)/sqrt(length(df1$signal1))
+  errS[i] <- 1.96*sd(df2$signal1)/sqrt(length(df2$signal1))
+  
+  #******************************************* Name each dataframe i.e ExMesh1
+  
+  assign(paste('ExMesh',i,sep=''),df1)
+  assign(paste('StMesh',i,sep=''),df2)
+
+}
+
+#*************************************** Now create Histograms for both
+
+for (i in 1:6) {
+  
+#*************************************** i = 1:6 Create new file for every 6 plots
+
+#*************************************** Begin Meshes 1-3
+  if (i == 1) {
+    
+#*************************************** Create new file to be saved in Desktop and set margins    
+    
+    pdf(file = "Desktop/Hist1-3.pdf")     
+    par(mfrow = c(3,2))
+    par(mar = c(4,4,4,4))
+    
+    for (j in 1:3) {
+    
+#*************************************** Plot Ex and St together     
+         
+      hist(ExSig[[j]], col = Hcol[j], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[j])
+      hist(StSig[[j]], col = Hcol[j], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[(j+18)])
+      
+    }
+    dev.off()
+  }
+#*************************************** Begin Meshes 4-6
+  if (i == 2) {
+    
+#***************************************    
+    
+    pdf(file = "Desktop/Hist4-6.pdf")     
+    par(mfrow = c(3,2))
+    par(mar = c(4,4,4,4))
+    
+    for (j in 1:3) {
+      
+#***************************************      
+      
+      hist(ExSig[[(j+3)]], col = Hcol[(j+3)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[(j+3)])
+      hist(StSig[[(j+3)]], col = Hcol[(j+3)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[(j+21)])
+      
+    }
+    dev.off()
+  }
+#*************************************** Begin Meshes 7-9
+  if (i == 3) {
+    
+#*************************************** 
+    
+    pdf(file = "Desktop/Hist7-9.pdf")     
+    par(mfrow = c(3,2))
+    par(mar = c(4,4,4,4))
+    
+    for (j in 1:3) {
+      
+#****************************************      
+      
+      hist(ExSig[[(j+6)]], col = Hcol[(j+6)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[(j+6)])
+      hist(StSig[[(j+6)]], col = Hcol[(j+6)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[(j+24)])
+      
+    }
+    dev.off()
+  }
+#*************************************** Begin Meshes 10-12
+  if (i == 4) {
+    
+#*************************************** 
+    
+    pdf(file = "Desktop/Hist10-12.pdf")     
+    par(mfrow = c(3,2))
+    par(mar = c(4,4,4,4))
+    
+    for (j in 1:3) {
+      
+#***************************************
+      
+      hist(ExSig[[(j+9)]], col = Hcol[(j+9)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[(j+9)])
+      hist(StSig[[(j+9)]], col = Hcol[(j+9)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[j+27])
+      
+    }
+    dev.off()
+  }
+#*************************************** Begin Meshes 13-15
+  if (i == 5) {
+    
+#*************************************** 
+    
+    pdf(file = "Desktop/Hist13-15.pdf")     
+    par(mfrow = c(3,2))
+    par(mar = c(4,4,4,4))
+    
+    for (j in 1:3) {
+      
+#***************************************      
+      
+      hist(ExSig[[(j+12)]], col = Hcol[(j+12)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[j+12])
+      hist(StSig[[(j+12)]], col = Hcol[(j+12)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[j+30])
+      
+    }
+    dev.off()
+  }
+#*************************************** Begin Meshes 16-18
+  if (i == 6) {
+    
+#*************************************** 
+    
+    pdf(file = "Desktop/Hist16-18.pdf")     
+    par(mfrow = c(3,2))
+    par(mar = c(4,4,4,4))
+    
+    for (j in 1:3) {
+      
+#***************************************      
+      
+      hist(ExSig[[(j+15)]], col = Hcol[(j+15)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[j+15])
+      hist(StSig[[(j+15)]], col = Hcol[(j+15)], breaks = 50, xlim = c(0,15), 
+           xlab = "mCherry Signal (AU)", ylim = c(0,80), 
+           main = devices[j+33])
+      
+    }
+    dev.off()
+  }
+}
+
+#********************************** Setup vectors for barplot
+
+means <- c(meanE,0,meanS);
+errs <- c(errE,0,errS);
+
+#********************************** Replace negative means with zeroes
+
+for (i in 1:length(means)) {
+  if (means[i] < 0 ) {
+    means[i] <- 0
+  }
+}
+
+#********************************** Construct intervals
+
+lower = means - errs;
+upper = means + errs;
+
+##****************** Produce Barplot with both stationary and exponential bars
+##****************** on the graph, separated by a vertical line. Colour bars 
+##****************** accordingly. 
+
+pdf(file = "Desktop/Barplot.pdf") 
+
+par(mar = c(7,4,2,2) + 1)
+
+barplot(means,ylim = c(0,10),space = 1, 
+        col = c(Hcol,'blue',Hcol),
+        ylab = 'mCherry Relative Fluorescence Units', 
+        main=expression(paste(italic('In vivo  '),'Characterisation of Biosensor')),
+        border = NA, width = 1)
+
+#*******************************************  Add Names of bars at angles
+
+text(seq(1.5,73.5,by=2), par("usr")[3]-0.25, 
+     srt = 60, adj= 1, xpd = TRUE,
+     labels = c(devices[1:18],'',devices[19:36]) , cex=0.65)
+
+#******************************************* Add line of separation and intervals
+
+abline(v = 37.5)
+errbar(seq(1.5,73.5,by=2),means,lower,upper,add=T,pch='')
+dev.off()
+
+#******************************************** END PLOT
+
+#**************************** t tests - compute certain combinations:
+
+Etest1 <- t.test(ExMesh3$signal1,ExMesh15$signal1)   # 3~15 Diff
+Etest2 <- t.test(ExMesh15$signal1,ExMesh17$signal1)  # 15~17 NotDiff
+Etest3 <- t.test(ExMesh17$signal1,ExMesh13$signal1)  # 17~13 Diff
+Etest4 <- t.test(ExMesh5$signal1,ExMesh13$signal1)   # 5~13 Diff
+Etest5 <- t.test(ExMesh2$signal1,ExMesh3$signal1)    # 2~3 Diff
+Etest6 <- t.test(ExMesh2$signal1,ExMesh5$signal1)    # 2~5 Diff
+Etest7 <- t.test(ExMesh7$signal1,ExMesh9$signal1)    # 7~9 NotDiff
+Etest8 <- t.test(ExMesh7$signal1,ExMesh11$signal1)   # 7~11 NotDiff
+Etest9 <- t.test(ExMesh5$signal1,ExMesh7$signal1)    # 5~7 NotDiff
+Etest10 <- t.test(ExMesh3$signal1,ExMesh5$signal1)   # 3~5 Diff
+
+Stest1 <- t.test(StMesh3$signal1,StMesh15$signal1)   # 3~15 Diff
+Stest2 <- t.test(StMesh15$signal1,StMesh17$signal1)  # 15~17 NotDiff
+Stest3 <- t.test(StMesh17$signal1,StMesh13$signal1)  # 17~13 Diff
+Stest4 <- t.test(StMesh5$signal1,StMesh13$signal1)   # 5~13 NotDiff
+Stest5 <- t.test(StMesh2$signal1,StMesh3$signal1)    # 2~3 NotDiff
+Stest6 <- t.test(StMesh2$signal1,StMesh5$signal1)    # 2~5 Diff
+Stest7 <- t.test(StMesh7$signal1,StMesh9$signal1)    # 7~9 Diff
+Stest8 <- t.test(StMesh7$signal1,StMesh11$signal1)   # 7~11 Diff
+Stest9 <- t.test(StMesh5$signal1,StMesh7$signal1)    # 5~7 Diff
+Stest10 <- t.test(StMesh3$signal1,StMesh5$signal1)   # 3~5 Diff
